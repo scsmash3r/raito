@@ -1,4 +1,4 @@
-<img src="logo.svg" height="200" style="margin: auto;"/>
+<img src="logo.svg" width="100%" style="margin: auto;"/>
 
 # [Raito](https://arnaud.at/raito) | Mini Markdown CMS ✨📝
 > Build your website with a single file!

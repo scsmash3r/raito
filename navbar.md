@@ -1,2 +1,2 @@
-- [![Raito Logo](/logo.svg) Home](README)
+- [&blk34;](README)
 - [Examples](examples)
