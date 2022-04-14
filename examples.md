@@ -2,11 +2,11 @@
 ## Blockquotes
 Markdown
 ```markdown
-> Not all those who wander are lost
+> Not all those who wander [are lost](README)
 ```
 
 Output
-> Not all those who wander are lost
+> Not all those who wander [are lost](README)
 
 ## Tables
 Markdown
@@ -50,17 +50,39 @@ Output
 ## Code Blocks
 Markdown
 ````markdown
-```js
-var foo = function (bar) {
-  return bar++;
-};
+```ts
+class MyClass {
+  public static myValue: string;
+  constructor(init: string) {
+    this.myValue = init;
+  }
+}
+import fs = require("fs");
+module MyModule {
+  export interface MyInterface extends Other {
+    myProperty: any;
+  }
+}
+declare magicNumber number;
+myArray.forEach(() => { }); // fat arrow syntax
 ```
 ````
 Output
-``` js
-var foo = function (bar) {
-  return bar++;
-};
+```ts
+class MyClass {
+  public static myValue: string;
+  constructor(init: string) {
+    this.myValue = init;
+  }
+}
+import fs = require("fs");
+module MyModule {
+  export interface MyInterface extends Other {
+    myProperty: any;
+  }
+}
+declare magicNumber number;
+myArray.forEach(() => { }); // fat arrow syntax
 ```
 ## Links
 Markdown

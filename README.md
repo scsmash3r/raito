@@ -1,4 +1,4 @@
-<img src="logo.svg" width="100%" style="margin: auto;"/>
+<img src="logo.svg" id="logo" width="75%" style="margin: auto;"/>
 
 # [Raito](https://arnaud.at/raito) | Mini Markdown CMS ✨📝
 > Build your website with a single file!
@@ -18,7 +18,6 @@ Place Markdown files in the directory. Folders redirect to `README.md`.
 
 Most modern Markdown components are supported, check [the examples](https://arnaud.at/raito/#/examples).
 
-
 ### Relative links
 All links to local markdown files should be relative (not starting with `/`).  
 Directory links (ending with `/`) will display the root `README.md`.
@@ -34,10 +33,17 @@ Check out the branch `subdir-example` for a working example at [http://localhost
 Uncomment the  [highlight.js](https://github.com/highlightjs/highlight.js/) imports in `index.html`.
 This adds significant bundle size.
 
+### Stylesheets from Syntax Highlight can be applied globally
+Set `applyHighlightStyles` option in config to `true` to apply styles with `data-apply-global="true"` attribute. This adds some serious templating abilities to your CMS :)
+
 ### Components
 Components are visible in every page, and useful for navbars, sidebars and footers.
 
 Create your component in a `.md` file, then add it to `config.json`.
+
+You can also embed other `.md` files into current, using syntax: **!&lsqb;&lsqb;navbar.md&rsqb;&rsqb;**
+
+![[navbar.md]]
 
 ### Chart.js
 `Chart.js` support is not official yet, but check out this [setup example](https://github.com/arnaudsm/raito/tree/chartjs-example).

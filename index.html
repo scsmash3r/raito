@@ -1,29 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-dark-theme="dark" data-light-theme="light" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/logo.svg" sizes="any" type="image/svg+xml">
+    <link rel="icon"
+        href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAA7ElEQVQ4jaXTv0oEMRAG8N+J9VkLWvnfxlp8B7XxHlDvLOQqn0G4TlCQc1Gwt9R69yw2keySnOANBDKZ+b7MfMmwog0K58c4x37wK9xj/hfhBiZosOitBmMMl4GfM8D+eiqR3CZJX5jiDg+Zim5yPadJU2zhCie46MUbHMJaILjUFbTBaajgER+YJfFBwPwS7JaECbZA3Tvbg/UloBlG2ic8wFkuKVbwnolFDbaxk+RGe0udnIijsP/EJl6SeC2ImNpE9xmrxK/wnfjXuXaGVvxIkWQs/5XrcHMHXBqmI+0wxT7n2mF6Ld38b/sBmURcXJPLvhMAAAAASUVORK5CYII="
+        sizes="any" type="image/png">
 </head>
 
 <!-- Marked - Markdown to HTML library -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-<!-- OPTIONAL : Highlight.js - Syntax Highlighting -->
-<!--
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/highlight.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/styles/base16/solarized-dark.min.css">
--->
+<!-- OPTIONAL : Highlight.js - Syntax Highlighting | https://cdnjs.com/libraries/highlight.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/an-old-hope.min.css"
+    data-apply-global="true">
 
 <!-- Configure me! -->
 <script>
     const config = {
-        root: "", // Website Root URL. Eg: "/raito/" 
+        root: "", // Website Root URL. Eg: "/raito/"
         name: "Raito",
-        elements: ["navbar", "github_ribbon"],
-        errorMessage: "Page not found"
+        elements: {
+            beforeContent: ["navbar", "github_ribbon"], // .md files rendered before content
+            afterContent: ["footer"], // .md files rendered after content
+        },
+        errorMessage: "Page not found",
+        // Allows inlcusion of other .md files into .md file
+        markdownTransclusionRegex: /\!\[\[([\w].+[\.md])\]\]/g,
+        markdownTransclusionEnabled: true,
+        applyHighlightStyles: false, // If `true`, will apply colors from `data-apply-global` hljs stylesheet
     }
 </script>
 
@@ -109,10 +118,8 @@
     }
 
     pre {
-        background: var(--darker-background-color);
-        padding: 1.6em !important;
+        padding: 1.6em;
         overflow: auto;
-        padding: calc(0.75em);
         margin-bottom: 1em;
         border-radius: var(--border-radius);
     }
@@ -120,7 +127,7 @@
     blockquote {
         margin: 0;
         padding: 1em 2em !important;
-        background: #4285f4;
+        background: var(--color-1);
         color: white;
         overflow: auto;
         border-radius: var(--border-radius);
@@ -224,6 +231,7 @@
         color: white;
         margin: 0;
         position: fixed;
+        z-index: 1000;
     }
 
     #navbar>ul>li>a>img {
@@ -299,6 +307,15 @@
     #github_ribbon p {
         margin: 0;
     }
+
+    [data-theme="dark"] #logo {
+       filter: invert(1);
+    }
+
+    .hljs {
+        background: var(--darker-background-color);
+        border-radius: var(--border-radius);
+    }
 </style>
 
 <body>
@@ -309,19 +326,39 @@
     if (typeof hljs == 'undefined') var hljs;
 
     const init = async () => {
-        (config.elements || []).forEach((element) => loadElement(element));
+        (config.applyHighlightStyles) ? setStyles() : '';
+        (config.elements.beforeContent || []).forEach((e) => loadElement(e, 'before'));
         loadContent(window.location.hash);
+        (config.elements.afterContent || []).forEach((e) => loadElement(e, 'after'));
     };
 
     const renderMD = async (path) => {
         const res = await fetch(`${config.root}${path}.md`);
         if (res.status != 200) return;
-        const markdown = await res.text();
-        return marked.parse(markdown,
-            {
-                baseUrl: "#/",
-                highlight: (code) => hljs ? hljs.highlightAuto(code).value : code,
-            });
+        let markdown = await res.text();
+
+        // Render included {{somefile.md}} files inside current file
+        if (config.markdownTransclusionRegex) {
+            const renderTMD = [...markdown.matchAll(config.markdownTransclusionRegex)];
+            for (let regexMatch of renderTMD) {
+                let replaceText = (config.markdownTransclusionEnabled === true) ? ' ' : '';
+                if (replaceText) {
+                    let resT = await fetch(config.root + regexMatch[1]);
+                    replaceText = await resT.text();
+                    if (resT.status != 200) return;
+                }
+                markdown = markdown.replace(regexMatch[0], replaceText);
+            }
+        }
+
+        return marked.parse(markdown, {
+            baseUrl: "#/",
+            highlight: function(code, lang) {
+                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                return hljs.highlight(code, { language }).value;
+            },
+            langPrefix: 'hljs language-',
+        });
     }
 
     const loadContent = async (hash) => {
@@ -341,7 +378,7 @@
                 checkbox.disabled = "";
                 checkbox.parentElement.parentElement.classList.add("checklist");
             });
-        document.title = (document.querySelectorAll("h1")[0]?.innerText || "") + " | " + config.name || "";
+        document.title = (document.querySelectorAll("h1")[0] ?.innerText || "") + " | " + config.name || "";
         document.body.classList.add("loaded");
 
         // Clean Hash
@@ -349,15 +386,76 @@
         window.location.replace(hash);
     };
 
-    const loadElement = async (element) => {
+    const loadElement = async (element, position) => {
         const elementHtml = await renderMD(element);
         if (!elementHtml) return
 
         let elementDiv = document.createElement('div');
         elementDiv.innerHTML = elementHtml;
         elementDiv.id = element;
-        document.body.prepend(elementDiv);
+        if (position == 'before') {
+            document.body.prepend(elementDiv);
+        }
+        if (position == 'after') {
+            document.body.append(elementDiv);
+        }
     };
+
+    const setStyles = async() => {
+        const hljsStyles = document.querySelector('link[data-apply-global="true"]') || '';
+        if (!hljsStyles.href) return;
+
+        const styles = await fetch(hljsStyles.href);
+        if (styles.status != 200) return;
+
+        const str = await styles.text();
+        const arr = str.split(/[{}]/).filter(String).map(function(str){
+            return str.trim();
+        });
+        const extendHex = shortHex =>
+        '#' +
+        shortHex
+        .slice(shortHex.startsWith('#') ? 1 : 0)
+        .split('')
+        .map(x => shortHex.length <= 4 ? x + x : x)
+        .join('');
+        const regexBackground = /background:([0-9a-fA-F#]+)/g;
+        const regexText = /color:([0-9a-fA-F#]+)/g;
+        for (var k in arr){
+            if (arr.hasOwnProperty(k)) {
+                if (arr[k] == '.hljs') {
+                    k++;
+                    let bg = [...arr[k].matchAll(regexBackground)][0][1] || [];
+                    if (bg) {
+                        document.documentElement.style.setProperty('--background-color', bg);
+                    }
+                    let text = [...arr[k].matchAll(regexText)][0][1] || [];
+                    if (text) {
+                        document.documentElement.style.setProperty('--text-color', text);
+                        document.documentElement.style.setProperty('--darker-background-color', '#00000022');
+                    }
+                }
+                if (arr[k].includes('.hljs-string')) {
+                    console.log(arr[k])
+                    k++;
+                    let text = [...arr[k].matchAll(regexText)][0][1] || [];
+                    if (text) document.documentElement.style.setProperty('--color-1', text);
+                }
+                if (arr[k].includes('.hljs-keyword')) {
+                    console.log(arr[k])
+                    k++;
+                    let text = [...arr[k].matchAll(regexText)][0][1] || [];
+                    if (text) document.documentElement.style.setProperty('--color-2', text);
+                }
+                if (arr[k].includes('.hljs-comment')) {
+                    console.log(arr[k])
+                    k++;
+                    let text = [...arr[k].matchAll(regexText)][0][1] || [];
+                    if (text) document.documentElement.style.setProperty('--border-color', text);
+                }
+            }
+        }
+    }
 
     window.onload = init;
     window.onhashchange = () => loadContent(window.location.hash);
